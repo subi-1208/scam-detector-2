@@ -39,7 +39,10 @@ export async function POST(request: Request) {
     const rules = await getRules();
     const result = body.type === "text" ? await analyzeTextInput(content, rules) : await analyzeUrlInput(content, rules);
 
-    await saveHistoryItem(result);
+    await saveHistoryItem(result).catch((error) => {
+      // Vercel read-only 환경에서 쓰기 실패 시 분석 자체는 정상 반환
+      console.warn("saveHistoryItem failed (readonly fallback active):", error);
+    });
 
     return NextResponse.json({ result });
   } catch (error) {
